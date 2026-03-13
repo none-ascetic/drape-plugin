@@ -145,6 +145,12 @@ export class NuOrderClient {
     attempt = 0,
     body?: unknown
   ): Promise<T> {
+    if (!this.mock && !this.auth) {
+      throw new Error(
+        "NuOrder credentials not configured. Run /drape:setup to connect your account."
+      );
+    }
+
     await semaphore.acquire();
     let slotReleased = false;
     try {

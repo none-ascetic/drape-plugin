@@ -15,8 +15,8 @@ if (!isMockDomain()) {
     auth = NuOrderAuth.fromEnv();
   } catch (err) {
     if (err instanceof NuOrderAuthError) {
-      process.stderr.write(`[drape-mcp-server] Startup error: ${err.message}\n`);
-      process.exit(1);
+      process.stderr.write(`[drape-mcp-server] ${err.message}. Run /drape:setup to connect your account.\n`);
+      // Continue without credentials — tools will return a setup prompt instead of crashing.
     }
     throw err;
   }

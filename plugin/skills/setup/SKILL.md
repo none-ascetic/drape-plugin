@@ -45,31 +45,37 @@ If they choose anything other than NuOrder, be honest: "The API tools won't conn
 
 ## Step 5 — API credentials
 
-**Important: never ask the user to type credentials into the chat.** Credentials typed here appear in conversation history. Instead, guide them to create the file manually:
+Ask the user for their four NuOrder API credentials. You can ask for all four in one message:
 
-1. Tell the user the exact path of the file they need to create:
-   `${CLAUDE_SKILL_DIR}/../../mcp-server/.env`
+- **Consumer Key** (`NUORDER_CONSUMER_KEY`)
+- **Consumer Secret** (`NUORDER_CONSUMER_SECRET`)
+- **Token** (`NUORDER_TOKEN`)
+- **Token Secret** (`NUORDER_TOKEN_SECRET`)
 
-2. Show them this template and ask them to fill it in and save it:
-   ```
-   NUORDER_CONSUMER_KEY=your_value_here
-   NUORDER_CONSUMER_SECRET=your_value_here
-   NUORDER_TOKEN=your_value_here
-   NUORDER_TOKEN_SECRET=your_value_here
-   NUORDER_DOMAIN=wholesale.nuorder.com
-   NUORDER_READ_ONLY=true
-   ```
+Tell them where to find these: NuOrder → Settings → API / Developer Settings. If they're unsure, suggest they contact their NuOrder account manager.
 
-3. Tell them where to find their credentials: their wholesale platform's API or developer settings.
+Once you have all four values, use the Write tool to create the credentials file at:
+`${CLAUDE_SKILL_DIR}/../../mcp-server/.env`
 
-4. **Read-only mode:** Strongly recommend they leave `NUORDER_READ_ONLY=true` for now. Explain: this prevents any accidental writes to their live platform data. They can change it to `false` later when they are ready to use write operations.
+Write exactly this content (substituting their actual values):
+```
+# NuOrder API credentials — do not share or commit this file
+NUORDER_CONSUMER_KEY=<their_value>
+NUORDER_CONSUMER_SECRET=<their_value>
+NUORDER_TOKEN=<their_value>
+NUORDER_TOKEN_SECRET=<their_value>
+NUORDER_DOMAIN=wholesale.nuorder.com
+NUORDER_READ_ONLY=true
+```
 
-5. Once they confirm the file is saved, use Read to verify it exists at the correct path. If it's missing or empty, help them locate the right path.
+After writing, restrict the file permissions:
+```bash
+chmod 600 "${CLAUDE_SKILL_DIR}/../../mcp-server/.env"
+```
 
-6. Use Bash to restrict file permissions:
-   ```bash
-   chmod 600 "${CLAUDE_SKILL_DIR}/../../mcp-server/.env"
-   ```
+**Read-only mode:** Mention that `NUORDER_READ_ONLY=true` prevents any accidental writes to their live platform data. They can change it to `false` later when ready for write operations.
+
+If the Write tool fails (e.g. read-only filesystem), fall back to showing the user the exact file path and template to create manually. But automatic creation is the primary path.
 
 ## Step 6 — Additional context
 
@@ -80,7 +86,12 @@ Ask one open question:
 
 ### Write `${CLAUDE_SKILL_DIR}/../../context/brand.md`
 
-Use the Write tool to create this file. Populate it with what you learned:
+First, ensure the directory exists:
+```bash
+mkdir -p "${CLAUDE_SKILL_DIR}/../../context"
+```
+
+Then use the Write tool to create the file at `${CLAUDE_SKILL_DIR}/../../context/brand.md`. Populate it with what you learned:
 
 ```
 # Brand Context
@@ -101,7 +112,7 @@ Use the Write tool to create this file. Populate it with what you learned:
 
 ### `mcp-server/.env`
 
-Do not write this file — the user created it manually in Step 5. Do not read or display its contents. Simply confirm it exists using Read and that `chmod 600` was applied.
+This file was written in Step 5. Do not read or display its contents. Confirm it exists with Read and that `chmod 600` was applied.
 
 ## Step 8 — Confirm
 

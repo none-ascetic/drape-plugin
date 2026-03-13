@@ -7,8 +7,8 @@
   },
   "mcpServers": {
     "drape": {
-      "command": "bun",
-      "args": ["run", "--env-file", "${CLAUDE_PLUGIN_ROOT}/mcp-server/.env", "${CLAUDE_PLUGIN_ROOT}/mcp-server/src/index.ts"]
+      "command": "bash",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-server/start.sh"]
     }
   }
 }

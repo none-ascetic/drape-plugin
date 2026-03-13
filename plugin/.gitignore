@@ -8,8 +8,8 @@ context/
 # Dependencies
 node_modules/
 
-# Build output
-dist/
+# Build output — dist/index.js is committed (pre-compiled bundle for Co-Work)
+dist/*.map
 
 # OS
 .DS_Store

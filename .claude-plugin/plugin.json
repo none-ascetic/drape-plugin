@@ -1,14 +1,14 @@
 {
   "name": "drape",
-  "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
   "version": "0.1.0",
-  "skills": "./skills",
-  "agents": "./agents",
+  "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
+  "author": {
+    "name": "none-ascetic"
+  },
   "mcpServers": {
     "drape": {
-      "type": "stdio",
       "command": "bun",
-      "args": ["run", "--env-file", "mcp-server/.env", "mcp-server/src/index.ts"]
+      "args": ["run", "--env-file", "${CLAUDE_PLUGIN_ROOT}/mcp-server/.env", "${CLAUDE_PLUGIN_ROOT}/mcp-server/src/index.ts"]
     }
   }
 }

@@ -19526,41 +19526,27 @@ class NuOrderAuth {
       accessTokenSecret: process.env[ENV_VARS.ACCESS_TOKEN_SECRET]
     });
   }
-  validate() {
-    const { consumerKey, consumerSecret, accessToken, accessTokenSecret } = this.credentials;
-    if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
-      throw new NuOrderAuthError("OAuth credentials are incomplete");
-    }
-  }
   sign(method, url) {
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const nonce = crypto.randomBytes(16).toString("hex");
+    const nonce = crypto.randomBytes(8).toString("hex");
     const urlObj = new URL(url);
-    const queryParams = {};
-    urlObj.searchParams.forEach((value, key) => {
-      queryParams[key] = value;
-    });
-    const oauthParams = {
-      oauth_consumer_key: this.credentials.consumerKey,
-      oauth_nonce: nonce,
-      oauth_signature_method: "HMAC-SHA1",
-      oauth_timestamp: timestamp,
-      oauth_token: this.credentials.accessToken,
-      oauth_version: "1.0"
-    };
-    const allParams = { ...queryParams, ...oauthParams };
-    const sortedParams = Object.keys(allParams).sort().map((k) => `${percentEncode(k)}=${percentEncode(allParams[k])}`).join("&");
+    const queryParams = [];
+    urlObj.searchParams.forEach((value, key) => queryParams.push([key, value]));
+    const oauthParams = [
+      ["oauth_consumer_key", this.credentials.consumerKey],
+      ["oauth_token", this.credentials.accessToken],
+      ["oauth_timestamp", timestamp],
+      ["oauth_nonce", nonce],
+      ["oauth_version", "1.0"],
+      ["oauth_signature_method", "HMAC-SHA1"]
+    ];
+    const paramString = [...oauthParams, ...queryParams].map(([k, v]) => `${k}=${v}`).join("&");
     const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
-    const signatureBase = `${method.toUpperCase()}${percentEncode(baseUrl)}&${percentEncode(sortedParams)}`;
-    const signingKey = `${percentEncode(this.credentials.consumerSecret)}&${percentEncode(this.credentials.accessTokenSecret)}`;
-    const signature = crypto.createHmac("sha1", signingKey).update(signatureBase).digest("base64");
-    oauthParams["oauth_signature"] = signature;
-    const authHeader = "OAuth " + Object.keys(oauthParams).sort().map((k) => `${k}="${percentEncode(oauthParams[k])}"`).join(", ");
-    return authHeader;
+    const signatureBase = `${method.toUpperCase()}${baseUrl}?${paramString}`;
+    const signingKey = `${this.credentials.consumerSecret}&${this.credentials.accessTokenSecret}`;
+    const signature = crypto.createHmac("sha1", signingKey).update(signatureBase).digest("hex");
+    return "OAuth " + [...oauthParams, ["oauth_signature", signature]].map(([k, v]) => `${k}=${v}`).join(",");
   }
-}
-function percentEncode(str) {
-  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 }
 
 // src/services/client.ts

@@ -12,21 +12,17 @@ export class NuOrderAuthError extends Error {
 /**
  * NuOrder OAuth 1.0 HMAC-SHA1 signing.
  *
- * NuOrder uses a non-standard base string: the method and URL are NOT
- * separated by `&`. Instead the base string is:
- *   METHOD&percent_encoded_url&percent_encoded_params
+ * NuOrder's server deviates significantly from RFC 5849. Standard OAuth
+ * libraries will produce invalid signatures. Confirmed working against
+ * live NuOrder API 2026-03-13. Reference: github.com/jacobsvante/nuorder
  *
- * Wait — actually the non-standard part documented in the NuOrder SDK is
- * that they do NOT use the standard OAuth base string separator between
- * method and URL. The base string is built as:
- *   `{METHOD}&{encodedURL}&{encodedParams}`
- *
- * That IS the standard form. The NuOrder-specific quirk is that they sign
- * with `consumerSecret&tokenSecret` as the HMAC key (standard), but the
- * base string omits the `&` after the HTTP method — i.e. the base string is:
- *   `{METHOD}{encodedURL}&{encodedParams}`
- *
- * This class follows NuOrder's reference implementation exactly.
+ * Deviations from standard OAuth:
+ *   Base string : METHOD + URL + "?" + params  (no & separators, no encoding)
+ *   Param order : consumer_key, token, timestamp, nonce, version, sig_method
+ *   Param values: NOT URL-encoded in the base string
+ *   Signing key : raw consumer_secret&token_secret  (NOT percent-encoded)
+ *   Digest      : hex  (NOT base64)
+ *   Auth header : OAuth k=v,k=v  (no quotes around values, no spaces)
  */
 export class NuOrderAuth {
   private credentials: NuOrderCredentials;
@@ -35,10 +31,6 @@ export class NuOrderAuth {
     this.credentials = credentials;
   }
 
-  /**
-   * Load credentials from environment variables. Throws NuOrderAuthError
-   * if any required env var is missing.
-   */
   static fromEnv(): NuOrderAuth {
     const missing = REQUIRED_ENV_VARS.filter((v) => !process.env[v]);
     if (missing.length > 0) {
@@ -55,92 +47,51 @@ export class NuOrderAuth {
     });
   }
 
-  /**
-   * Validate that all credentials are present. Useful for startup checks.
-   */
-  validate(): void {
-    const { consumerKey, consumerSecret, accessToken, accessTokenSecret } =
-      this.credentials;
-    if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
-      throw new NuOrderAuthError("OAuth credentials are incomplete");
-    }
-  }
-
-  /**
-   * Generate the OAuth Authorization header for a request.
-   *
-   * @param method - HTTP method (GET, POST, etc.)
-   * @param url - Full URL including query string
-   * @returns Authorization header value
-   */
   sign(method: string, url: string): string {
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const nonce = crypto.randomBytes(16).toString("hex");
+    const nonce = crypto.randomBytes(8).toString("hex"); // 16 hex chars
 
-    // Parse query params from the URL so they're included in the signature
+    // Extract query params already on the URL
     const urlObj = new URL(url);
-    const queryParams: Record<string, string> = {};
-    urlObj.searchParams.forEach((value, key) => {
-      queryParams[key] = value;
-    });
+    const queryParams: [string, string][] = [];
+    urlObj.searchParams.forEach((value, key) => queryParams.push([key, value]));
 
-    // Collect OAuth params (without oauth_signature)
-    const oauthParams: Record<string, string> = {
-      oauth_consumer_key: this.credentials.consumerKey,
-      oauth_nonce: nonce,
-      oauth_signature_method: "HMAC-SHA1",
-      oauth_timestamp: timestamp,
-      oauth_token: this.credentials.accessToken,
-      oauth_version: "1.0",
-    };
+    // NuOrder-specific param order — NOT alphabetical, values NOT encoded
+    const oauthParams: [string, string][] = [
+      ["oauth_consumer_key", this.credentials.consumerKey],
+      ["oauth_token", this.credentials.accessToken],
+      ["oauth_timestamp", timestamp],
+      ["oauth_nonce", nonce],
+      ["oauth_version", "1.0"],
+      ["oauth_signature_method", "HMAC-SHA1"],
+    ];
 
-    // Merge and sort all params for the signature base string
-    const allParams = { ...queryParams, ...oauthParams };
-    const sortedParams = Object.keys(allParams)
-      .sort()
-      .map(
-        (k) =>
-          `${percentEncode(k)}=${percentEncode(allParams[k])}`
-      )
+    const paramString = [...oauthParams, ...queryParams]
+      .map(([k, v]) => `${k}=${v}`)
       .join("&");
 
     // Base URL without query string
     const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
 
-    // NuOrder non-standard base string: no `&` between METHOD and encoded URL
-    // Standard OAuth:  METHOD & encodedURL & encodedParams
-    // NuOrder:         METHOD encodedURL & encodedParams
-    const signatureBase = `${method.toUpperCase()}${percentEncode(baseUrl)}&${percentEncode(sortedParams)}`;
+    // NuOrder base string: METHOD concatenated directly with URL then "?" + params
+    // No & separators between method/URL/params; URL and param values are NOT encoded
+    const signatureBase = `${method.toUpperCase()}${baseUrl}?${paramString}`;
 
-    // HMAC-SHA1 key: consumerSecret&tokenSecret
-    const signingKey = `${percentEncode(this.credentials.consumerSecret)}&${percentEncode(this.credentials.accessTokenSecret)}`;
+    // Signing key: raw secret&secret — NOT percent-encoded
+    const signingKey = `${this.credentials.consumerSecret}&${this.credentials.accessTokenSecret}`;
 
+    // Digest: hex — NOT base64
     const signature = crypto
       .createHmac("sha1", signingKey)
       .update(signatureBase)
-      .digest("base64");
+      .digest("hex");
 
-    oauthParams["oauth_signature"] = signature;
-
-    // Build the Authorization header
-    const authHeader =
+    // Auth header: OAuth k=v,k=v — no quotes, no spaces after commas
+    return (
       "OAuth " +
-      Object.keys(oauthParams)
-        .sort()
-        .map((k) => `${k}="${percentEncode(oauthParams[k])}"`)
-        .join(", ");
-
-    return authHeader;
+      [...oauthParams, ["oauth_signature", signature]]
+        .map(([k, v]) => `${k}=${v}`)
+        .join(",")
+    );
   }
-}
-
-/**
- * RFC 3986 percent encoding — stricter than encodeURIComponent.
- * Encodes characters that encodeURIComponent leaves unencoded: ! ' ( ) *
- */
-function percentEncode(str: string): string {
-  return encodeURIComponent(str).replace(
-    /[!'()*]/g,
-    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
-  );
 }

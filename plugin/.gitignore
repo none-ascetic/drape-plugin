@@ -1,0 +1,15 @@
+# Credentials — never commit
+mcp-server/.env
+mcp-server/.env.local
+
+# Brand context — written by /drape:setup, never commit
+context/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# OS
+.DS_Store

@@ -9,10 +9,7 @@
       "version": "0.1.0",
       "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
       "category": "productivity",
-      "source": {
-        "source": "github",
-        "repo": "none-ascetic/drape-plugin"
-      }
+      "source": "./plugin"
     }
   ]
 }

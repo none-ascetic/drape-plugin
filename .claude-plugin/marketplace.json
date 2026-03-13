@@ -1,10 +1,18 @@
 {
+  "name": "drape",
+  "owner": {
+    "name": "none-ascetic"
+  },
   "plugins": [
     {
       "name": "drape",
       "version": "0.1.0",
       "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
-      "source": "."
+      "category": "productivity",
+      "source": {
+        "source": "github",
+        "repo": "none-ascetic/drape-plugin"
+      }
     }
   ]
 }

@@ -1,15 +1,18 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "drape",
-  "marketplaceUrl": "https://github.com/none-ascetic/drape-plugin",
+  "version": "0.1.0",
+  "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
+  "owner": {
+    "name": "none-ascetic"
+  },
   "plugins": [
     {
       "name": "drape",
       "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
       "version": "0.1.0",
-      "source": {
-        "type": "directory",
-        "path": "."
-      }
+      "source": ".",
+      "category": "productivity"
     }
   ]
 }

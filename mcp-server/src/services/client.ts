@@ -146,6 +146,7 @@ export class NuOrderClient {
     body?: unknown
   ): Promise<T> {
     await semaphore.acquire();
+    let slotReleased = false;
     try {
       const headers: Record<string, string> = {
         Accept: "application/json",
@@ -175,6 +176,10 @@ export class NuOrderClient {
           throw new NuOrderRateLimitError(retryAfterMs);
         }
 
+        // Release slot before sleeping so other requests aren't blocked
+        // during the backoff window. Re-acquired on the next attempt.
+        slotReleased = true;
+        semaphore.release();
         await sleep(retryAfterMs);
         return this.request<T>(method, url, attempt + 1, body);
       }
@@ -190,7 +195,7 @@ export class NuOrderClient {
 
       return (await response.json()) as T;
     } finally {
-      semaphore.release();
+      if (!slotReleased) semaphore.release();
     }
   }
 }

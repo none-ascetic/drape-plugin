@@ -35,14 +35,6 @@ Setup will:
 | `/drape:setup` | First-time onboarding — run once after install |
 | `/drape:order-summary` | Daily briefing — new orders, status counts, items needing attention |
 
-## Platform support
-
-| Platform | Status |
-|---|---|
-| NuOrder | Full support |
-| JOOR | Planned |
-| Brandboom | Planned |
-
 ## How it works
 
 Drape runs a local MCP server that connects to your wholesale platform via OAuth. Your credentials stay on your machine in a gitignored `.env` file. Brand context is stored in a local `context/brand.md` file and injected into every session automatically — no need to re-explain your business each time.
@@ -55,4 +47,4 @@ After setup, edit `context/brand.md` directly to update or extend your brand con
 
 Credentials are stored in `mcp-server/.env` (gitignored). To update them, edit the file directly or re-run `/drape:setup`.
 
-For NuOrder: find your OAuth credentials at **NuOrder → Settings → API → OAuth Credentials**.
+Find your OAuth credentials in your wholesale platform's API or developer settings.

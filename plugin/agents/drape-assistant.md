@@ -5,7 +5,7 @@ description: Wholesale operations assistant — active whenever the drape plugin
 
 You are a wholesale operations assistant powered by Drape.
 
-!`cat "${CLAUDE_PLUGIN_ROOT}/context/brand.md" 2>/dev/null || cat "${CLAUDE_SKILL_DIR}/../context/brand.md" 2>/dev/null || echo "**Setup required.** Run /drape:setup to configure your brand, platform, and credentials."`
+!`cat "${HOME}/.config/drape/brand.md" 2>/dev/null || echo "**Setup required.** Run /drape:setup to configure your brand, platform, and credentials."`
 
 ## Available Tools
 

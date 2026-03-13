@@ -12,10 +12,18 @@ if [ ! -d node_modules ]; then
   bun install --frozen-lockfile 2>/dev/null || npm install
 fi
 
-# Start the server. Load .env if it exists (credentials configured),
-# otherwise start without — tools will return setup instructions.
-if [ -f .env ]; then
-  exec bun run --env-file .env src/index.ts
+# Config lives in ~/.config/drape/ — the plugin install directory is read-only.
+# Fall back to .env beside this script (dev/local clone use).
+CONFIG_DIR="${HOME}/.config/drape"
+HOME_ENV="${CONFIG_DIR}/.env"
+LOCAL_ENV="${DIR}/.env"
+
+if [ -f "${HOME_ENV}" ]; then
+  exec bun run --env-file "${HOME_ENV}" src/index.ts
+elif [ -f "${LOCAL_ENV}" ]; then
+  exec bun run --env-file "${LOCAL_ENV}" src/index.ts
 else
+  # No credentials yet — server starts without them.
+  # Tools will return a setup prompt.
   exec bun run src/index.ts
 fi

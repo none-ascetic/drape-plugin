@@ -10,9 +10,9 @@ You are guiding a new user through first-time setup of the Drape wholesale opera
 
 Tell the user:
 - Setup takes 2–3 minutes
-- It creates two local config files that are never committed to git:
-  - `context/brand.md` — your brand context, loaded automatically every session
-  - `mcp-server/.env` — your API credentials, used to connect to your wholesale platform
+- It creates two config files in `~/.config/drape/` on their machine (never committed to git):
+  - `brand.md` — your brand context, loaded automatically every session
+  - `.env` — your API credentials, used to connect to your wholesale platform
 
 ## Step 2 — User info
 
@@ -54,44 +54,47 @@ Ask the user for their four NuOrder API credentials. You can ask for all four in
 
 Tell them where to find these: NuOrder → Settings → API / Developer Settings. If they're unsure, suggest they contact their NuOrder account manager.
 
-Once you have all four values, use the Write tool to create the credentials file at:
-`${CLAUDE_SKILL_DIR}/../../mcp-server/.env`
+Once you have all four values:
 
-Write exactly this content (substituting their actual values):
-```
-# NuOrder API credentials — do not share or commit this file
-NUORDER_CONSUMER_KEY=<their_value>
-NUORDER_CONSUMER_SECRET=<their_value>
-NUORDER_TOKEN=<their_value>
-NUORDER_TOKEN_SECRET=<their_value>
-NUORDER_DOMAIN=wholesale.nuorder.com
-NUORDER_READ_ONLY=true
-```
+1. Create the config directory:
+   ```bash
+   mkdir -p "${HOME}/.config/drape"
+   ```
 
-After writing, restrict the file permissions:
-```bash
-chmod 600 "${CLAUDE_SKILL_DIR}/../../mcp-server/.env"
-```
+2. Use the Write tool to create the credentials file at `~/.config/drape/.env`:
+
+   Write exactly this content (substituting their actual values):
+   ```
+   # NuOrder API credentials — stored locally, never committed or shared
+   NUORDER_CONSUMER_KEY=<their_value>
+   NUORDER_CONSUMER_SECRET=<their_value>
+   NUORDER_TOKEN=<their_value>
+   NUORDER_TOKEN_SECRET=<their_value>
+   NUORDER_DOMAIN=wholesale.nuorder.com
+   NUORDER_READ_ONLY=true
+   ```
+
+3. Restrict the file permissions:
+   ```bash
+   chmod 600 "${HOME}/.config/drape/.env"
+   ```
 
 **Read-only mode:** Mention that `NUORDER_READ_ONLY=true` prevents any accidental writes to their live platform data. They can change it to `false` later when ready for write operations.
-
-If the Write tool fails (e.g. read-only filesystem), fall back to showing the user the exact file path and template to create manually. But automatic creation is the primary path.
 
 ## Step 6 — Additional context
 
 Ask one open question:
 "Anything else I should know about your business? For example: key buyers or accounts, trade show calendar, seasonal deadlines, main product categories."
 
-## Step 7 — Write config files
+## Step 7 — Write brand context
 
-### Write `${CLAUDE_SKILL_DIR}/../../context/brand.md`
+Create the brand context file at `~/.config/drape/brand.md`:
 
-First, ensure the directory exists:
 ```bash
-mkdir -p "${CLAUDE_SKILL_DIR}/../../context"
+mkdir -p "${HOME}/.config/drape"
 ```
 
-Then use the Write tool to create the file at `${CLAUDE_SKILL_DIR}/../../context/brand.md`. Populate it with what you learned:
+Then use the Write tool to create `~/.config/drape/brand.md`. Populate it with what you learned:
 
 ```
 # Brand Context
@@ -110,23 +113,18 @@ Then use the Write tool to create the file at `${CLAUDE_SKILL_DIR}/../../context
 {anything from step 6, or "None provided." if nothing given}
 ```
 
-### `mcp-server/.env`
-
-This file was written in Step 5. Do not read or display its contents. Confirm it exists with Read and that `chmod 600` was applied.
-
 ## Step 8 — Confirm
 
 Tell the user:
-- ✓ Brand context saved to `context/brand.md`
-- ✓ Credentials saved to `mcp-server/.env` (if applicable)
-- These files are gitignored and won't be committed
+- ✓ Brand context saved to `~/.config/drape/brand.md`
+- ✓ Credentials saved to `~/.config/drape/.env`
+- Both files are local to this machine and will never be committed or shared
 
 Then suggest: "Try `/drape:order-summary` to see your daily briefing, or just ask me anything about your orders or buyers."
 
 ## Security reminders (surface these during setup)
 
-- Credentials are stored only on this machine and are never sent to Anthropic or any third party beyond your wholesale platform.
-- The `.env` file is gitignored — it will never be committed if you version-control this directory.
-- Do not share your `.env` file or paste its contents into chat, emails, or tickets.
+- Credentials are stored only on this machine in `~/.config/drape/` and are never sent to Anthropic or any third party beyond your wholesale platform.
+- Do not paste credentials into chat, emails, or tickets.
 - Read-only mode is on by default. Only disable it when you need write operations and understand the implications.
 - If you suspect your credentials have been compromised, rotate them immediately in your platform's API settings.

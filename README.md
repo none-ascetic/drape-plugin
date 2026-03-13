@@ -48,3 +48,11 @@ After setup, edit `context/brand.md` directly to update or extend your brand con
 Credentials are stored in `mcp-server/.env` (gitignored). To update them, edit the file directly or re-run `/drape:setup`.
 
 Find your OAuth credentials in your wholesale platform's API or developer settings.
+
+## Security
+
+- **Credentials stay local.** Your `.env` file is never committed to git, never read aloud in chat, and never sent to Anthropic. It is only used by the local MCP server process on your machine.
+- **Read-only by default.** Setup enables read-only mode automatically. This prevents any accidental writes to your live platform data. Disable it only when you need write operations.
+- **Restrict file permissions.** Setup runs `chmod 600 mcp-server/.env` automatically. If you create the file manually, do the same.
+- **Don't paste credentials into chat.** Anything typed in a conversation appears in your session history. Setup guides you to write credentials directly to the file instead.
+- **Rotate if compromised.** If you suspect your credentials have been exposed, rotate them immediately in your platform's API settings, then update your `.env`.

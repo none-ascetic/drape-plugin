@@ -1,7 +1,7 @@
 ---
 name: setup
 description: First-time setup — configure your brand, wholesale platform, and API credentials. Run this once after installing the drape plugin.
-allowed-tools: Write, WebFetch, Read
+allowed-tools: Write, WebFetch, Read, Bash
 ---
 
 You are guiding a new user through first-time setup of the Drape wholesale operations plugin. Be warm, concise, and conversational. Ask one topic at a time.
@@ -43,17 +43,33 @@ Ask which wholesale platform they use:
 
 If they choose anything other than NuOrder, be honest: "The API tools won't connect to [platform] yet, but I'll save your brand context so I can help with research and planning."
 
-## Step 5 — API credentials (NuOrder only)
+## Step 5 — API credentials
 
-If they selected NuOrder, ask for:
-- Consumer Key
-- Consumer Secret
-- OAuth Token
-- OAuth Token Secret
+**Important: never ask the user to type credentials into the chat.** Credentials typed here appear in conversation history. Instead, guide them to create the file manually:
 
-Tell them where to find these: NuOrder account → Settings → API → OAuth Credentials.
+1. Tell the user the exact path of the file they need to create:
+   `${CLAUDE_SKILL_DIR}/../../mcp-server/.env`
 
-Ask if they want read-only mode enabled (recommended to start — prevents accidental writes).
+2. Show them this template and ask them to fill it in and save it:
+   ```
+   NUORDER_CONSUMER_KEY=your_value_here
+   NUORDER_CONSUMER_SECRET=your_value_here
+   NUORDER_TOKEN=your_value_here
+   NUORDER_TOKEN_SECRET=your_value_here
+   NUORDER_DOMAIN=wholesale.nuorder.com
+   NUORDER_READ_ONLY=true
+   ```
+
+3. Tell them where to find their credentials: their wholesale platform's API or developer settings.
+
+4. **Read-only mode:** Strongly recommend they leave `NUORDER_READ_ONLY=true` for now. Explain: this prevents any accidental writes to their live platform data. They can change it to `false` later when they are ready to use write operations.
+
+5. Once they confirm the file is saved, use Read to verify it exists at the correct path. If it's missing or empty, help them locate the right path.
+
+6. Use Bash to restrict file permissions:
+   ```bash
+   chmod 600 "${CLAUDE_SKILL_DIR}/../../mcp-server/.env"
+   ```
 
 ## Step 6 — Additional context
 
@@ -83,18 +99,9 @@ Use the Write tool to create this file. Populate it with what you learned:
 {anything from step 6, or "None provided." if nothing given}
 ```
 
-### Write `${CLAUDE_SKILL_DIR}/../../mcp-server/.env`
+### `mcp-server/.env`
 
-Only write this if NuOrder credentials were provided:
-
-```
-NUORDER_CONSUMER_KEY={value}
-NUORDER_CONSUMER_SECRET={value}
-NUORDER_TOKEN={value}
-NUORDER_TOKEN_SECRET={value}
-NUORDER_DOMAIN=wholesale.nuorder.com
-NUORDER_READ_ONLY={true or false}
-```
+Do not write this file — the user created it manually in Step 5. Do not read or display its contents. Simply confirm it exists using Read and that `chmod 600` was applied.
 
 ## Step 8 — Confirm
 
@@ -104,3 +111,11 @@ Tell the user:
 - These files are gitignored and won't be committed
 
 Then suggest: "Try `/drape:order-summary` to see your daily briefing, or just ask me anything about your orders or buyers."
+
+## Security reminders (surface these during setup)
+
+- Credentials are stored only on this machine and are never sent to Anthropic or any third party beyond your wholesale platform.
+- The `.env` file is gitignored — it will never be committed if you version-control this directory.
+- Do not share your `.env` file or paste its contents into chat, emails, or tickets.
+- Read-only mode is on by default. Only disable it when you need write operations and understand the implications.
+- If you suspect your credentials have been compromised, rotate them immediately in your platform's API settings.

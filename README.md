@@ -1,15 +1,15 @@
 # Drape
 
-A Claude Code plugin for wholesale operations. Connects your B2B platform to Claude — natural-language access to orders, buyers, products, and catalogs.
+A Claude Co-Work plugin for wholesale operations. Connects your B2B platform to Claude — natural-language access to orders, buyers, products, and catalogs.
 
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/claude-code) with a Max plan
+- [Claude Co-Work](https://claude.ai) with a Max plan
 - [Bun](https://bun.sh) — the MCP server runs on Bun (`curl -fsSL https://bun.sh/install | bash`)
 
 ## Install
 
-In Claude Code:
+In Claude Co-Work:
 
 ```
 /plugin marketplace add none-ascetic/drape-plugin
@@ -46,7 +46,7 @@ Drape runs a local MCP server that connects to your wholesale platform via OAuth
 
 ## Customising brand context
 
-After setup, edit `context/brand.md` directly to update or extend your brand context. Changes take effect in the next Claude Code session.
+After setup, edit `context/brand.md` directly to update or extend your brand context. Changes take effect in the next Co-Work session.
 
 ## Credentials
 

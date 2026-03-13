@@ -1,6 +1,9 @@
 # Credentials — never commit
-nuorder-mcp-server/.env
-nuorder-mcp-server/.env.local
+mcp-server/.env
+mcp-server/.env.local
+
+# Brand context — written by /drape:setup, never commit
+context/
 
 # Dependencies
 node_modules/

@@ -17,10 +17,10 @@ const READ_ONLY_ANNOTATIONS = {
 } as const;
 
 export function registerCompanyTools(server: McpServer, client: NuOrderClient): void {
-  // nuorder_list_companies
+  // drape_list_companies
   server.tool(
-    "nuorder_list_companies",
-    "List NuOrder buyer/retailer companies with pagination. Returns company names, codes, and statuses.",
+    "drape_list_companies",
+    "List buyer/retailer companies with pagination. Returns company names, codes, and statuses.",
     {
       limit: z
         .number()
@@ -80,15 +80,15 @@ export function registerCompanyTools(server: McpServer, client: NuOrderClient): 
     }
   );
 
-  // nuorder_get_company
+  // drape_get_company
   server.tool(
-    "nuorder_get_company",
-    "Get full company profile by NuOrder internal ID, including contacts, addresses, and status. Use nuorder_get_company_by_code for retailer code lookups.",
+    "drape_get_company",
+    "Get full company profile by internal ID, including contacts, addresses, and status. Use drape_get_company_by_code for retailer code lookups.",
     {
       company_id: z
         .string()
         .min(1)
-        .describe("The NuOrder internal company ID (_id). Example: '507f1f77bcf86cd799439011'."),
+        .describe("The internal company ID (_id). Example: '507f1f77bcf86cd799439011'."),
     },
     READ_ONLY_ANNOTATIONS,
     async ({ company_id }) => {
@@ -102,7 +102,7 @@ export function registerCompanyTools(server: McpServer, client: NuOrderClient): 
           return {
             content: [{
               type: "text" as const,
-              text: `Company not found — check the company ID. Received: "${company_id}". Use nuorder_list_companies to browse companies.`,
+              text: `Company not found — check the company ID. Received: "${company_id}". Use drape_list_companies to browse companies.`,
             }],
             isError: true,
           };
@@ -115,10 +115,10 @@ export function registerCompanyTools(server: McpServer, client: NuOrderClient): 
     }
   );
 
-  // nuorder_get_company_by_code
+  // drape_get_company_by_code
   server.tool(
-    "nuorder_get_company_by_code",
-    "Get full company profile by retailer code (e.g. 'SSENSE', 'NET-A-PORTER'). For internal ID lookups use nuorder_get_company instead.",
+    "drape_get_company_by_code",
+    "Get full company profile by retailer code (e.g. 'SSENSE', 'NET-A-PORTER'). For internal ID lookups use drape_get_company instead.",
     {
       code: z
         .string()
@@ -137,7 +137,7 @@ export function registerCompanyTools(server: McpServer, client: NuOrderClient): 
           return {
             content: [{
               type: "text" as const,
-              text: `Company not found for code "${code}". Use nuorder_list_companies to browse companies.`,
+              text: `Company not found for code "${code}". Use drape_list_companies to browse companies.`,
             }],
             isError: true,
           };
@@ -188,7 +188,7 @@ function formatCompany(co: NuOrderCompany): string {
 
 function formatError(err: unknown, context: string): string {
   if (err instanceof NuOrderApiError) {
-    return `NuOrder API error while ${context} (HTTP ${err.status}): ${err.message}`;
+    return `API error while ${context} (HTTP ${err.status}): ${err.message}`;
   }
   if (err instanceof Error) {
     return `Error while ${context}: ${err.message}`;

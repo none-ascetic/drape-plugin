@@ -18,10 +18,10 @@ const READ_ONLY_ANNOTATIONS = {
 } as const;
 
 export function registerOrderTools(server: McpServer, client: NuOrderClient): void {
-  // nuorder_list_orders
+  // drape_list_orders
   server.tool(
-    "nuorder_list_orders",
-    "List NuOrder orders. Filter by status (pending, approved, processing, shipped, cancelled, draft). Returns paginated results with a cursor for the next page.",
+    "drape_list_orders",
+    "List wholesale orders. Filter by status (pending, approved, processing, shipped, cancelled, draft). Returns paginated results with a cursor for the next page.",
     {
       status: z
         .enum(ORDER_STATUSES)
@@ -101,15 +101,15 @@ export function registerOrderTools(server: McpServer, client: NuOrderClient): vo
     }
   );
 
-  // nuorder_get_order
+  // drape_get_order
   server.tool(
-    "nuorder_get_order",
-    "Get full details for a NuOrder order by its internal ID (_id field). For order number lookups use nuorder_get_order_by_number instead.",
+    "drape_get_order",
+    "Get full details for an order by its internal ID (_id field). For order number lookups use drape_get_order_by_number instead.",
     {
       order_id: z
         .string()
         .min(1)
-        .describe("The NuOrder internal order ID (_id). Example: '507f1f77bcf86cd799439011'."),
+        .describe("The internal order ID (_id). Example: '507f1f77bcf86cd799439011'."),
     },
     READ_ONLY_ANNOTATIONS,
     async ({ order_id }) => {
@@ -121,7 +121,7 @@ export function registerOrderTools(server: McpServer, client: NuOrderClient): vo
           return {
             content: [{
               type: "text" as const,
-              text: `Order not found — check the order ID format. Received: "${order_id}". Use nuorder_list_orders to browse orders.`,
+              text: `Order not found — check the order ID format. Received: "${order_id}". Use drape_list_orders to browse orders.`,
             }],
             isError: true,
           };
@@ -134,15 +134,15 @@ export function registerOrderTools(server: McpServer, client: NuOrderClient): vo
     }
   );
 
-  // nuorder_get_order_by_number
+  // drape_get_order_by_number
   server.tool(
-    "nuorder_get_order_by_number",
-    "Get full details for a NuOrder order by its human-readable order number (e.g. 'ORD-12345'). For internal ID lookups use nuorder_get_order instead.",
+    "drape_get_order_by_number",
+    "Get full details for an order by its human-readable order number (e.g. 'ORD-12345'). For internal ID lookups use drape_get_order instead.",
     {
       order_number: z
         .string()
         .min(1)
-        .describe("The human-readable NuOrder order number. Example: 'ORD-12345'."),
+        .describe("The human-readable order number. Example: 'ORD-12345'."),
     },
     READ_ONLY_ANNOTATIONS,
     async ({ order_number }) => {
@@ -156,7 +156,7 @@ export function registerOrderTools(server: McpServer, client: NuOrderClient): vo
           return {
             content: [{
               type: "text" as const,
-              text: `Order not found — check the order number format. Received: "${order_number}". Use nuorder_list_orders to browse orders.`,
+              text: `Order not found — check the order number format. Received: "${order_number}". Use drape_list_orders to browse orders.`,
             }],
             isError: true,
           };
@@ -199,7 +199,7 @@ function formatOrder(order: NuOrderOrder): string {
 
 function formatError(err: unknown, context: string): string {
   if (err instanceof NuOrderApiError) {
-    return `NuOrder API error while ${context} (HTTP ${err.status}): ${err.message}`;
+    return `API error while ${context} (HTTP ${err.status}): ${err.message}`;
   }
   if (err instanceof Error) {
     return `Error while ${context}: ${err.message}`;

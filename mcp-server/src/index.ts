@@ -14,7 +14,7 @@ if (!isMockDomain()) {
     NuOrderAuth.fromEnv();
   } catch (err) {
     if (err instanceof NuOrderAuthError) {
-      process.stderr.write(`[nuorder-mcp-server] Startup error: ${err.message}\n`);
+      process.stderr.write(`[drape-mcp-server] Startup error: ${err.message}\n`);
       process.exit(1);
     }
     throw err;
@@ -22,7 +22,7 @@ if (!isMockDomain()) {
 }
 
 const server = new McpServer({
-  name: "nuorder-mcp-server",
+  name: "drape-mcp-server",
   version: "0.1.0",
 });
 

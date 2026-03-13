@@ -1,10 +1,10 @@
 {
   "name": "drape",
-  "marketplaceUrl": "https://github.com/none-ascetic/drape-nuorder",
+  "marketplaceUrl": "https://github.com/none-ascetic/drape-plugin",
   "plugins": [
     {
-      "name": "drape-nuorder",
-      "description": "AI-powered NuOrder operations for Miista wholesale management. Natural-language access to orders, buyers, products, and catalogs.",
+      "name": "drape",
+      "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
       "version": "0.1.0",
       "source": {
         "type": "directory",

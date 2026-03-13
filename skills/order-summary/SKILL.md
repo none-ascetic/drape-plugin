@@ -1,18 +1,18 @@
 ---
 name: order-summary
-description: Daily briefing of NuOrder order activity — new orders, status breakdown, and items needing attention.
+description: Daily briefing of wholesale order activity — new orders, status breakdown, and items needing attention.
 ---
 
-Produce a daily order summary for Steph. Follow these steps in order:
+Produce a daily order summary. Follow these steps in order:
 
 ## Step 1 — Fetch order data
 
-Call `nuorder_list_orders` for each of these statuses in parallel (or sequentially if parallel is not available):
+Call `drape_list_orders` for each of these statuses in parallel (or sequentially if parallel is not available):
 - `pending` — orders awaiting approval
 - `approved` — orders approved but not yet shipped
 - `shipped` — orders that have been fulfilled and dispatched
 
-Also call `nuorder_list_orders` with no status filter to get a recent sample of all orders (limit 50) for spotting new activity.
+Also call `drape_list_orders` with no status filter to get a recent sample of all orders (limit 50) for spotting new activity.
 
 If any tool call fails or times out, note the failure but continue with the data you have. Degrade gracefully — a partial summary is better than no summary.
 
@@ -52,7 +52,7 @@ Output a concise briefing using this structure:
 **Formatting rules:**
 - Keep each line brief — one order per bullet, no paragraph text
 - Flag orders that are: pending for more than 3 days, missing ship/cancel dates, or have a total above £10,000
-- If all statuses returned zero results, state clearly: "No orders found — NuOrder may be empty or the API may be unavailable"
+- If all statuses returned zero results, state clearly: "No orders found — the API may be unavailable or your platform may have no orders yet"
 - Do not repeat the same order in multiple sections
 
 ## Step 4 — Offer next steps

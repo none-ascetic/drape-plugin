@@ -18,9 +18,9 @@ const READ_ONLY_ANNOTATIONS = {
 } as const;
 
 export function registerProductTools(server: McpServer, client: NuOrderClient): void {
-  // nuorder_list_products
+  // drape_list_products
   server.tool(
-    "nuorder_list_products",
+    "drape_list_products",
     "List catalogue products with pagination. Returns product names, style numbers, prices, and seasons.",
     {
       limit: z
@@ -82,16 +82,16 @@ export function registerProductTools(server: McpServer, client: NuOrderClient): 
     }
   );
 
-  // nuorder_get_inventory
+  // drape_get_inventory
   server.tool(
-    "nuorder_get_inventory",
-    "Get inventory/stock levels for a product by NuOrder product ID or external ID. Returns quantity per SKU/size.",
+    "drape_get_inventory",
+    "Get inventory/stock levels for a product by internal ID or external ID. Returns quantity per SKU/size.",
     {
       product_id: z
         .string()
         .min(1)
         .optional()
-        .describe("The NuOrder internal product ID (_id). Use this or external_id."),
+        .describe("The internal product ID (_id). Use this or external_id."),
       external_id: z
         .string()
         .min(1)
@@ -125,7 +125,7 @@ export function registerProductTools(server: McpServer, client: NuOrderClient): 
           return {
             content: [{
               type: "text" as const,
-              text: `Inventory not found for ${product_id ? `product_id "${id}"` : `external_id "${id}"`}. Use nuorder_list_products to browse products.`,
+              text: `Inventory not found for ${product_id ? `product_id "${id}"` : `external_id "${id}"`}. Use drape_list_products to browse products.`,
             }],
             isError: true,
           };
@@ -138,10 +138,10 @@ export function registerProductTools(server: McpServer, client: NuOrderClient): 
     }
   );
 
-  // nuorder_list_catalogs
+  // drape_list_catalogs
   server.tool(
-    "nuorder_list_catalogs",
-    "List all line sheet catalogs via the NuOrder v3.1 API. Returns catalog names, seasons, statuses, and entry counts.",
+    "drape_list_catalogs",
+    "List all line sheet catalogs. Returns catalog names, seasons, statuses, and entry counts.",
     {},
     READ_ONLY_ANNOTATIONS,
     async () => {
@@ -205,7 +205,7 @@ function formatInventory(inv: NuOrderInventory): string {
 
 function formatError(err: unknown, context: string): string {
   if (err instanceof NuOrderApiError) {
-    return `NuOrder API error while ${context} (HTTP ${err.status}): ${err.message}`;
+    return `API error while ${context} (HTTP ${err.status}): ${err.message}`;
   }
   if (err instanceof Error) {
     return `Error while ${context}: ${err.message}`;

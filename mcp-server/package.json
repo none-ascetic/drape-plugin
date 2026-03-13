@@ -1,7 +1,7 @@
 {
-  "name": "nuorder-mcp-server",
+  "name": "drape-mcp-server",
   "version": "0.1.0",
-  "description": "MCP server for NuOrder wholesale platform — DRAPE plugin for Miista",
+  "description": "MCP server for wholesale platform access — drape plugin",
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {

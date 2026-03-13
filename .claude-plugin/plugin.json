@@ -1,0 +1,13 @@
+{
+  "name": "drape-nuorder",
+  "description": "AI-powered NuOrder operations for Miista wholesale management. Provides natural-language access to orders, buyers, products, and catalogs.",
+  "version": "0.1.0",
+  "skills": "./skills",
+  "mcpServers": {
+    "nuorder": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["run", "--env-file", "nuorder-mcp-server/.env", "nuorder-mcp-server/src/index.ts"]
+    }
+  }
+}

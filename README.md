@@ -2,6 +2,11 @@
 
 A Claude Code plugin for wholesale operations. Connects your B2B platform to Claude — natural-language access to orders, buyers, products, and catalogs.
 
+## Prerequisites
+
+- [Claude Code](https://claude.ai/claude-code) with a Max plan
+- [Bun](https://bun.sh) — the MCP server runs on Bun (`curl -fsSL https://bun.sh/install | bash`)
+
 ## Install
 
 In Claude Code:

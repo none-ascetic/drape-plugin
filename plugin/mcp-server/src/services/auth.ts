@@ -51,12 +51,8 @@ export class NuOrderAuth {
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const nonce = crypto.randomBytes(8).toString("hex"); // 16 hex chars
 
-    // Extract query params already on the URL
-    const urlObj = new URL(url);
-    const queryParams: [string, string][] = [];
-    urlObj.searchParams.forEach((value, key) => queryParams.push([key, value]));
-
-    // NuOrder-specific param order — NOT alphabetical, values NOT encoded
+    // NuOrder only includes oauth params in the base string — NOT URL query params.
+    // Reference: github.com/jacobsvante/nuorder _get_base_string()
     const oauthParams: [string, string][] = [
       ["oauth_consumer_key", this.credentials.consumerKey],
       ["oauth_token", this.credentials.accessToken],
@@ -66,11 +62,10 @@ export class NuOrderAuth {
       ["oauth_signature_method", "HMAC-SHA1"],
     ];
 
-    const paramString = [...oauthParams, ...queryParams]
-      .map(([k, v]) => `${k}=${v}`)
-      .join("&");
+    const paramString = oauthParams.map(([k, v]) => `${k}=${v}`).join("&");
 
-    // Base URL without query string
+    // Strip query string — base string uses clean URL path only
+    const urlObj = new URL(url);
     const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
 
     // NuOrder base string: METHOD concatenated directly with URL then "?" + params

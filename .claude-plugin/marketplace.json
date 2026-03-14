@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "drape",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "description": "AI-powered wholesale operations. Natural-language access to orders, buyers, products, and catalogs.",
       "category": "productivity",
       "source": "./plugin"

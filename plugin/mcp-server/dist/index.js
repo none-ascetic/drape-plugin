@@ -19529,9 +19529,6 @@ class NuOrderAuth {
   sign(method, url) {
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const nonce = crypto.randomBytes(8).toString("hex");
-    const urlObj = new URL(url);
-    const queryParams = [];
-    urlObj.searchParams.forEach((value, key) => queryParams.push([key, value]));
     const oauthParams = [
       ["oauth_consumer_key", this.credentials.consumerKey],
       ["oauth_token", this.credentials.accessToken],
@@ -19540,7 +19537,8 @@ class NuOrderAuth {
       ["oauth_version", "1.0"],
       ["oauth_signature_method", "HMAC-SHA1"]
     ];
-    const paramString = [...oauthParams, ...queryParams].map(([k, v]) => `${k}=${v}`).join("&");
+    const paramString = oauthParams.map(([k, v]) => `${k}=${v}`).join("&");
+    const urlObj = new URL(url);
     const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
     const signatureBase = `${method.toUpperCase()}${baseUrl}?${paramString}`;
     const signingKey = `${this.credentials.consumerSecret}&${this.credentials.accessTokenSecret}`;

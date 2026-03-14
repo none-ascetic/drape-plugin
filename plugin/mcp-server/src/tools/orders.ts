@@ -7,8 +7,6 @@ import {
   ORDER_STATUSES,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_MAX_LIMIT,
-  PAGINATION_CURSOR_PARAM,
-  PAGINATION_LIMIT_PARAM,
 } from "../constants.js";
 
 const READ_ONLY_ANNOTATIONS = {
@@ -43,22 +41,14 @@ export function registerOrderTools(server: McpServer, client: NuOrderClient): vo
     READ_ONLY_ANNOTATIONS,
     async ({ status, limit, cursor }) => {
       try {
-        const params: Record<string, string | number | boolean> = {
-          [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT,
-        };
-        if (cursor) params[PAGINATION_CURSOR_PARAM] = cursor;
-
         // NuOrder API: status goes in URL path, not query param.
-        // /api/orders/{status}/detail returns full objects.
-        // /api/orders/list requires start_date+end_date and returns IDs only.
+        // /api/orders/{status}/detail returns full order objects.
+        // IMPORTANT: No query params — NuOrder's OAuth rejects requests with query params.
         const path = status
           ? `${API_V1}/orders/${encodeURIComponent(status)}/detail`
           : `${API_V1}/orders/pending/detail`; // default to pending when no status given
 
-        const result = await client.get<NuOrderPaginatedResponse<NuOrderOrder>>(
-          path,
-          { params }
-        );
+        const result = await client.get<NuOrderPaginatedResponse<NuOrderOrder>>(path);
 
         // Normalise the three response shapes the API/mock can return:
         //   1. { data: [...], total: N }  — paginated production response

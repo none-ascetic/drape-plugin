@@ -19474,8 +19474,6 @@ var RATE_LIMIT_RETRY_MAX_MS = 32000;
 var RATE_LIMIT_MAX_RETRIES = 5;
 var PAGINATION_DEFAULT_LIMIT = 50;
 var PAGINATION_MAX_LIMIT = 500;
-var PAGINATION_CURSOR_PARAM = "__last_id";
-var PAGINATION_LIMIT_PARAM = "__limit";
 var ORDER_STATUSES = [
   "pending",
   "approved",
@@ -19705,13 +19703,8 @@ function registerOrderTools(server, client) {
     cursor: exports_external.string().optional().describe("Pagination cursor from a previous response (__last_id) to fetch the next page.")
   }, READ_ONLY_ANNOTATIONS, async ({ status, limit, cursor }) => {
     try {
-      const params = {
-        [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT
-      };
-      if (cursor)
-        params[PAGINATION_CURSOR_PARAM] = cursor;
       const path = status ? `${API_V1}/orders/${encodeURIComponent(status)}/detail` : `${API_V1}/orders/pending/detail`;
-      const result = await client.get(path, { params });
+      const result = await client.get(path);
       const raw = result;
       let orders;
       if (Array.isArray(raw)) {
@@ -19846,18 +19839,16 @@ function registerCompanyTools(server, client) {
     cursor: exports_external.string().optional().describe("Pagination cursor from a previous response (__last_id) to fetch the next page.")
   }, READ_ONLY_ANNOTATIONS2, async ({ limit, cursor }) => {
     try {
-      const params = {
-        [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT
-      };
-      if (cursor)
-        params[PAGINATION_CURSOR_PARAM] = cursor;
-      const result = await client.get(`${API_V1}/companies/list`, { params });
-      const companies = result.data ?? result;
-      const lastId = result.__last_id;
-      const total = result.total;
+      const allCompanies = await client.get(`${API_V1}/companies/modified/after/1/1/2000`);
+      const companies = Array.isArray(allCompanies) ? allCompanies : [];
+      const total = companies.length;
+      const effectiveLimit = limit ?? PAGINATION_DEFAULT_LIMIT;
+      const startIdx = cursor ? companies.findIndex((c) => c._id === cursor) + 1 : 0;
+      const page = companies.slice(startIdx, startIdx + effectiveLimit);
+      const lastId = page.length > 0 ? page[page.length - 1]?._id : undefined;
       const lines = [];
-      if (Array.isArray(companies) && companies.length > 0) {
-        for (const co of companies) {
+      if (page.length > 0) {
+        for (const co of page) {
           lines.push(`• ${co.name}  id=${co._id}` + (co.code ? `  code=${co.code}` : "") + (co.status ? `  status=${co.status}` : ""));
         }
       } else {
@@ -19985,18 +19976,16 @@ function registerProductTools(server, client) {
     cursor: exports_external.string().optional().describe("Pagination cursor from a previous response (__last_id) to fetch the next page.")
   }, READ_ONLY_ANNOTATIONS3, async ({ limit, cursor }) => {
     try {
-      const params = {
-        [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT
-      };
-      if (cursor)
-        params[PAGINATION_CURSOR_PARAM] = cursor;
-      const result = await client.get(`${API_V1}/products/list`, { params });
-      const products = result.data ?? result;
-      const lastId = result.__last_id;
-      const total = result.total;
+      const allProducts = await client.get(`${API_V1}/products/modified/after/1/1/2000`);
+      const products = Array.isArray(allProducts) ? allProducts : [];
+      const total = products.length;
+      const effectiveLimit = limit ?? PAGINATION_DEFAULT_LIMIT;
+      const startIdx = cursor ? products.findIndex((p) => p._id === cursor) + 1 : 0;
+      const page = products.slice(startIdx, startIdx + effectiveLimit);
+      const lastId = page.length > 0 ? page[page.length - 1]?._id : undefined;
       const lines = [];
-      if (Array.isArray(products) && products.length > 0) {
-        for (const p of products) {
+      if (page.length > 0) {
+        for (const p of page) {
           let line = `• ${p.name}  id=${p._id}`;
           if (p.style_number)
             line += `  style=${p.style_number}`;

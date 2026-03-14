@@ -6,8 +6,6 @@ import {
   API_V1,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_MAX_LIMIT,
-  PAGINATION_CURSOR_PARAM,
-  PAGINATION_LIMIT_PARAM,
 } from "../constants.js";
 
 const READ_ONLY_ANNOTATIONS = {
@@ -38,23 +36,27 @@ export function registerCompanyTools(server: McpServer, client: NuOrderClient): 
     READ_ONLY_ANNOTATIONS,
     async ({ limit, cursor }) => {
       try {
-        const params: Record<string, string | number | boolean> = {
-          [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT,
-        };
-        if (cursor) params[PAGINATION_CURSOR_PARAM] = cursor;
-
-        const result = await client.get<NuOrderPaginatedResponse<NuOrderCompany>>(
-          `${API_V1}/companies/list`,
-          { params }
+        // /api/companies/{field}/{when}/{mm}/{dd}/{yyyy} returns full objects.
+        // No query params — NuOrder's OAuth rejects requests with query params.
+        // Use a broad date to get all companies, then paginate in memory.
+        const allCompanies = await client.get<NuOrderCompany[]>(
+          `${API_V1}/companies/modified/after/1/1/2000`
         );
 
-        const companies = result.data ?? (result as unknown as NuOrderCompany[]);
-        const lastId = result.__last_id;
-        const total = result.total;
+        const companies: NuOrderCompany[] = Array.isArray(allCompanies) ? allCompanies : [];
+        const total = companies.length;
+
+        // Apply cursor (skip items before cursor) and limit in memory
+        const effectiveLimit = limit ?? PAGINATION_DEFAULT_LIMIT;
+        const startIdx = cursor
+          ? companies.findIndex((c) => c._id === cursor) + 1
+          : 0;
+        const page = companies.slice(startIdx, startIdx + effectiveLimit);
+        const lastId = page.length > 0 ? page[page.length - 1]?._id : undefined;
 
         const lines: string[] = [];
-        if (Array.isArray(companies) && companies.length > 0) {
-          for (const co of companies) {
+        if (page.length > 0) {
+          for (const co of page) {
             lines.push(
               `• ${co.name}  id=${co._id}` +
               (co.code ? `  code=${co.code}` : "") +

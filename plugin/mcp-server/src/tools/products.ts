@@ -7,8 +7,6 @@ import {
   API_V3_1,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_MAX_LIMIT,
-  PAGINATION_CURSOR_PARAM,
-  PAGINATION_LIMIT_PARAM,
 } from "../constants.js";
 
 const READ_ONLY_ANNOTATIONS = {
@@ -39,23 +37,26 @@ export function registerProductTools(server: McpServer, client: NuOrderClient): 
     READ_ONLY_ANNOTATIONS,
     async ({ limit, cursor }) => {
       try {
-        const params: Record<string, string | number | boolean> = {
-          [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT,
-        };
-        if (cursor) params[PAGINATION_CURSOR_PARAM] = cursor;
-
-        const result = await client.get<NuOrderPaginatedResponse<NuOrderProduct>>(
-          `${API_V1}/products/list`,
-          { params }
+        // /api/products/{field}/{when}/{mm}/{dd}/{yyyy} returns full objects.
+        // No query params — NuOrder's OAuth rejects requests with query params.
+        const allProducts = await client.get<NuOrderProduct[]>(
+          `${API_V1}/products/modified/after/1/1/2000`
         );
 
-        const products = result.data ?? (result as unknown as NuOrderProduct[]);
-        const lastId = result.__last_id;
-        const total = result.total;
+        const products: NuOrderProduct[] = Array.isArray(allProducts) ? allProducts : [];
+        const total = products.length;
+
+        // Paginate in memory
+        const effectiveLimit = limit ?? PAGINATION_DEFAULT_LIMIT;
+        const startIdx = cursor
+          ? products.findIndex((p) => p._id === cursor) + 1
+          : 0;
+        const page = products.slice(startIdx, startIdx + effectiveLimit);
+        const lastId = page.length > 0 ? page[page.length - 1]?._id : undefined;
 
         const lines: string[] = [];
-        if (Array.isArray(products) && products.length > 0) {
-          for (const p of products) {
+        if (page.length > 0) {
+          for (const p of page) {
             let line = `• ${p.name}  id=${p._id}`;
             if (p.style_number) line += `  style=${p.style_number}`;
             if (p.season) line += `  season=${p.season}`;

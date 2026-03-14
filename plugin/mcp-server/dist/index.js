@@ -20151,8 +20151,9 @@ if (!isMockDomain()) {
     if (err instanceof NuOrderAuthError) {
       process.stderr.write(`[drape-mcp-server] ${err.message}. Run /drape:setup to connect your account.
 `);
+    } else {
+      throw err;
     }
-    throw err;
   }
 }
 var server = new McpServer({

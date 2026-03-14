@@ -17,8 +17,9 @@ if (!isMockDomain()) {
     if (err instanceof NuOrderAuthError) {
       process.stderr.write(`[drape-mcp-server] ${err.message}. Run /drape:setup to connect your account.\n`);
       // Continue without credentials — tools will return a setup prompt instead of crashing.
+    } else {
+      throw err;
     }
-    throw err;
   }
 }
 

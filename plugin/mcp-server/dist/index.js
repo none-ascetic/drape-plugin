@@ -19528,22 +19528,18 @@ class NuOrderAuth {
   }
   sign(method, url) {
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const nonce = crypto.randomBytes(8).toString("hex");
-    const oauthParams = [
-      ["oauth_consumer_key", this.credentials.consumerKey],
-      ["oauth_token", this.credentials.accessToken],
-      ["oauth_timestamp", timestamp],
-      ["oauth_nonce", nonce],
-      ["oauth_version", "1.0"],
-      ["oauth_signature_method", "HMAC-SHA1"]
-    ];
-    const paramString = oauthParams.map(([k, v]) => `${k}=${v}`).join("&");
+    const keylist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let nonce = "";
+    for (let i = 0;i < 16; i++) {
+      nonce += keylist[Math.floor(Math.random() * keylist.length)];
+    }
     const urlObj = new URL(url);
     const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
-    const signatureBase = `${method.toUpperCase()}${baseUrl}?${paramString}`;
+    const paramString = `oauth_consumer_key=${this.credentials.consumerKey}&` + `oauth_token=${this.credentials.accessToken}&` + `oauth_timestamp=${timestamp}&` + `oauth_nonce=${nonce}&` + `oauth_version=1.0&` + `oauth_signature_method=HMAC-SHA1`;
+    const signatureBase = `${method.toUpperCase()}${encodeURI(baseUrl)}?${paramString}`;
     const signingKey = `${this.credentials.consumerSecret}&${this.credentials.accessTokenSecret}`;
     const signature = crypto.createHmac("sha1", signingKey).update(signatureBase).digest("hex");
-    return "OAuth " + [...oauthParams, ["oauth_signature", signature]].map(([k, v]) => `${k}=${v}`).join(",");
+    return `OAuth oauth_consumer_key="${this.credentials.consumerKey}",` + `oauth_timestamp="${timestamp}",` + `oauth_nonce="${nonce}",` + `oauth_version="1.0",` + `oauth_signature_method="HMAC-SHA1",` + `oauth_token="${this.credentials.accessToken}",` + `oauth_signature="${signature}"`;
   }
 }
 
@@ -19712,11 +19708,10 @@ function registerOrderTools(server, client) {
       const params = {
         [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT
       };
-      if (status)
-        params["status"] = status;
       if (cursor)
         params[PAGINATION_CURSOR_PARAM] = cursor;
-      const result = await client.get(`${API_V1}/order/list`, { params });
+      const path = status ? `${API_V1}/orders/${encodeURIComponent(status)}/detail` : `${API_V1}/orders/pending/detail`;
+      const result = await client.get(path, { params });
       const raw = result;
       let orders;
       if (Array.isArray(raw)) {

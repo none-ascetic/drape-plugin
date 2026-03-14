@@ -46,11 +46,17 @@ export function registerOrderTools(server: McpServer, client: NuOrderClient): vo
         const params: Record<string, string | number | boolean> = {
           [PAGINATION_LIMIT_PARAM]: limit ?? PAGINATION_DEFAULT_LIMIT,
         };
-        if (status) params["status"] = status;
         if (cursor) params[PAGINATION_CURSOR_PARAM] = cursor;
 
+        // NuOrder API: status goes in URL path, not query param.
+        // /api/orders/{status}/detail returns full objects.
+        // /api/orders/list requires start_date+end_date and returns IDs only.
+        const path = status
+          ? `${API_V1}/orders/${encodeURIComponent(status)}/detail`
+          : `${API_V1}/orders/pending/detail`; // default to pending when no status given
+
         const result = await client.get<NuOrderPaginatedResponse<NuOrderOrder>>(
-          `${API_V1}/order/list`,
+          path,
           { params }
         );
 

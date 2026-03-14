@@ -49,28 +49,30 @@ export class NuOrderAuth {
 
   sign(method: string, url: string): string {
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const nonce = crypto.randomBytes(8).toString("hex"); // 16 hex chars
 
-    // NuOrder only includes oauth params in the base string — NOT URL query params.
-    // Reference: github.com/jacobsvante/nuorder _get_base_string()
-    const oauthParams: [string, string][] = [
-      ["oauth_consumer_key", this.credentials.consumerKey],
-      ["oauth_token", this.credentials.accessToken],
-      ["oauth_timestamp", timestamp],
-      ["oauth_nonce", nonce],
-      ["oauth_version", "1.0"],
-      ["oauth_signature_method", "HMAC-SHA1"],
-    ];
-
-    const paramString = oauthParams.map(([k, v]) => `${k}=${v}`).join("&");
+    // Alphanumeric nonce matching NuOrder's generateNonce() in the API blueprint
+    const keylist = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let nonce = "";
+    for (let i = 0; i < 16; i++) {
+      nonce += keylist[Math.floor(Math.random() * keylist.length)];
+    }
 
     // Strip query string — base string uses clean URL path only
     const urlObj = new URL(url);
     const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
 
-    // NuOrder base string: METHOD concatenated directly with URL then "?" + params
-    // No & separators between method/URL/params; URL and param values are NOT encoded
-    const signatureBase = `${method.toUpperCase()}${baseUrl}?${paramString}`;
+    // NuOrder base string: METHOD + encodeURI(url) + "?" + params
+    // Param order: consumer_key, token, timestamp, nonce, version, sig_method
+    // Values are NOT encoded. Reference: API blueprint createSignature() lines 83-102.
+    const paramString =
+      `oauth_consumer_key=${this.credentials.consumerKey}&` +
+      `oauth_token=${this.credentials.accessToken}&` +
+      `oauth_timestamp=${timestamp}&` +
+      `oauth_nonce=${nonce}&` +
+      `oauth_version=1.0&` +
+      `oauth_signature_method=HMAC-SHA1`;
+
+    const signatureBase = `${method.toUpperCase()}${encodeURI(baseUrl)}?${paramString}`;
 
     // Signing key: raw secret&secret — NOT percent-encoded
     const signingKey = `${this.credentials.consumerSecret}&${this.credentials.accessTokenSecret}`;
@@ -81,12 +83,15 @@ export class NuOrderAuth {
       .update(signatureBase)
       .digest("hex");
 
-    // Auth header: OAuth k=v,k=v — no quotes, no spaces after commas
+    // Auth header: double quotes around values — Reference: API blueprint getAuthorizationHeader()
     return (
-      "OAuth " +
-      [...oauthParams, ["oauth_signature", signature]]
-        .map(([k, v]) => `${k}=${v}`)
-        .join(",")
+      `OAuth oauth_consumer_key="${this.credentials.consumerKey}",` +
+      `oauth_timestamp="${timestamp}",` +
+      `oauth_nonce="${nonce}",` +
+      `oauth_version="1.0",` +
+      `oauth_signature_method="HMAC-SHA1",` +
+      `oauth_token="${this.credentials.accessToken}",` +
+      `oauth_signature="${signature}"`
     );
   }
 }

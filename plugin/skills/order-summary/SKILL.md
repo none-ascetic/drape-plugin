@@ -12,16 +12,14 @@ Call `drape_list_orders` for each of these statuses in parallel (or sequentially
 - `approved` — orders approved but not yet shipped
 - `shipped` — orders that have been fulfilled and dispatched
 
-Also call `drape_list_orders` with no status filter to get a recent sample of all orders (limit 50) for spotting new activity.
-
 If any tool call fails or times out, note the failure but continue with the data you have. Degrade gracefully — a partial summary is better than no summary.
 
 ## Step 2 — Identify new orders
 
-From the unfiltered list, flag orders created or updated since the last business day:
+From all fetched orders, flag orders created or modified since the last business day:
 - Today is a weekday → "last business day" = yesterday
 - Today is Monday → "last business day" = Friday
-- Use the `created_at` or `updated_at` field to determine recency
+- Use the `created=` or `modified=` field from each order line to determine recency (format: YYYY-MM-DD)
 
 ## Step 3 — Format the briefing
 
@@ -30,8 +28,8 @@ Output a concise briefing using this structure:
 ```
 ## Daily Order Summary — {date}
 
-### New Since Last Business Day
-• {order_number} — {company_name} — {currency}{total} — Status: {status}
+### New / Modified Since Last Business Day
+• {order_number} — {company} — {total} — Status: {status} — Modified: {modified}
 (or "No new orders since {last business day}" if none)
 
 ### Orders by Status
@@ -42,7 +40,7 @@ Output a concise briefing using this structure:
 | Shipped    | N     |
 
 ### Needs Attention
-• {order_number} — {reason} (e.g. "pending >3 days", "missing ship date", "high value >£10,000")
+• {order_number} — {reason} (e.g. "pending, created >3 days ago", "missing ship window", "high value >£10,000")
 
 ### API Notes
 (Only include if any tool calls failed or returned no data)
@@ -51,7 +49,8 @@ Output a concise briefing using this structure:
 
 **Formatting rules:**
 - Keep each line brief — one order per bullet, no paragraph text
-- Flag orders that are: pending for more than 3 days, missing ship/cancel dates, or have a total above £10,000
+- The `company=` field contains the retailer name from NuOrder
+- Flag orders that are: pending with `created=` date more than 3 days ago, missing ship window (`ship=—`), or have a total above 10,000
 - If all statuses returned zero results, state clearly: "No orders found — the API may be unavailable or your platform may have no orders yet"
 - Do not repeat the same order in multiple sections
 

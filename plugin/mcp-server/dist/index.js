@@ -19721,7 +19721,7 @@ function registerOrderTools(server, client) {
       const lines = [];
       if (Array.isArray(orders) && orders.length > 0) {
         for (const order of orders) {
-          lines.push(`• ${order.order_number ?? order._id}  status=${order.status}  ` + `company=${order.company_name ?? order.company_id ?? "—"}  ` + `total=${order.currency ?? ""}${order.total ?? "—"}  ` + `ship=${order.ship_date ?? "—"}`);
+          lines.push(`• ${order.order_number ?? order._id}  status=${order.status}  ` + `company=${order.retailer?.retailer_name ?? order.retailer?.retailer_code ?? "—"}  ` + `total=${order.currency_code ?? ""}${order.total ?? "—"}  ` + `ship=${order.start_ship ? order.start_ship.slice(0, 10) : "—"}  ` + `created=${order.created_on ? order.created_on.slice(0, 10) : "—"}  ` + `modified=${order.modified_on ? order.modified_on.slice(0, 10) : "—"}`);
         }
       } else {
         lines.push("No orders found matching the specified criteria.");
@@ -19792,26 +19792,37 @@ function formatOrder(order) {
     `Order: ${order.order_number ?? order._id}`,
     `Status: ${order.status}`
   ];
-  if (order.company_name)
-    lines.push(`Company: ${order.company_name}`);
-  if (order.buyer_email)
-    lines.push(`Buyer: ${order.buyer_email}`);
+  if (order.retailer?.retailer_name)
+    lines.push(`Company: ${order.retailer.retailer_name}`);
+  if (order.retailer?.retailer_code)
+    lines.push(`Retailer code: ${order.retailer.retailer_code}`);
+  if (order.retailer?.buyer_name)
+    lines.push(`Buyer: ${order.retailer.buyer_name} (${order.retailer.buyer_email ?? ""})`);
   if (order.total !== undefined)
-    lines.push(`Total: ${order.currency ?? ""}${order.total}`);
-  if (order.ship_date)
-    lines.push(`Ship date: ${order.ship_date}`);
-  if (order.cancel_date)
-    lines.push(`Cancel date: ${order.cancel_date}`);
+    lines.push(`Total: ${order.currency_code ?? ""}${order.total}`);
+  if (order.total_quantity !== undefined)
+    lines.push(`Total units: ${order.total_quantity}`);
+  if (order.payment_status)
+    lines.push(`Payment: ${order.payment_status}`);
+  if (order.start_ship)
+    lines.push(`Ship window: ${order.start_ship.slice(0, 10)} → ${order.end_ship?.slice(0, 10) ?? "—"}`);
+  if (order.order_tags?.length)
+    lines.push(`Tags: ${order.order_tags.join(", ")}`);
   if (order.notes)
     lines.push(`Notes: ${order.notes}`);
-  if (order.created_at)
-    lines.push(`Created: ${order.created_at}`);
-  if (order.updated_at)
-    lines.push(`Updated: ${order.updated_at}`);
-  if (order.items && order.items.length > 0) {
-    lines.push("", `Items (${order.items.length}):`);
-    for (const item of order.items) {
-      lines.push(`  • ${item.name ?? item.sku ?? item.product_id}  qty=${item.quantity}  ` + `unit=${order.currency ?? ""}${item.unit_price}`);
+  if (order.rep_name)
+    lines.push(`Rep: ${order.rep_name} (${order.rep_email ?? ""})`);
+  if (order.created_on)
+    lines.push(`Created: ${order.created_on}`);
+  if (order.modified_on)
+    lines.push(`Modified: ${order.modified_on}`);
+  if (order.line_items && order.line_items.length > 0) {
+    lines.push("", `Line items (${order.line_items.length}):`);
+    for (const item of order.line_items) {
+      const style = item.product?.style_number ?? item.product?._id ?? item.id;
+      const color = item.product?.color ? ` ${item.product.color}` : "";
+      const qty = item.sizes?.reduce((sum, s) => sum + (s.quantity ?? 0), 0) ?? 0;
+      lines.push(`  • ${style}${color}  qty=${qty}`);
     }
   }
   return lines.join(`

@@ -31,32 +31,51 @@ export interface NuOrderCompany {
   updated_at?: string;
 }
 
+export interface NuOrderRetailer {
+  _id?: string;
+  retailer_name?: string;
+  retailer_code?: string;
+  buyer_name?: string;
+  buyer_email?: string;
+  payment_terms?: string;
+  shipping_terms?: string;
+}
+
 export interface NuOrderOrderItem {
-  product_id: string;
-  external_id?: string;
-  name?: string;
-  sku?: string;
-  quantity: number;
-  unit_price: number;
-  total_price?: number;
-  sizes?: Record<string, number>;
+  id?: string;
+  product?: { _id?: string; style_number?: string; color?: string; [key: string]: unknown };
+  ship_start?: string;
+  ship_end?: string;
+  sizes?: Array<{ size?: string; quantity?: number; price?: number; retail?: number }>;
+  warehouse?: string;
+  [key: string]: unknown;
 }
 
 export interface NuOrderOrder {
   _id: string;
   order_number?: string;
   status: string;
-  company_id?: string;
-  company_name?: string;
-  buyer_email?: string;
-  items?: NuOrderOrderItem[];
+  retailer?: NuOrderRetailer;
+  currency_code?: string;
   total?: number;
-  currency?: string;
+  total_quantity?: number;
+  discount?: number;
+  start_ship?: string;
+  end_ship?: string;
+  created_on?: string;
+  modified_on?: string;
   notes?: string;
-  ship_date?: string;
-  cancel_date?: string;
-  created_at?: string;
-  updated_at?: string;
+  payment_status?: string;
+  order_tags?: string[];
+  rep_name?: string;
+  rep_email?: string;
+  creator_name?: string;
+  customer_po_number?: string;
+  line_items?: NuOrderOrderItem[];
+  billing_address?: unknown;
+  shipping_address?: unknown;
+  locked?: boolean;
+  [key: string]: unknown;
 }
 
 export interface NuOrderProductVariant {
